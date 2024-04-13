@@ -1,12 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.awt.event.*;
 
 public class SpaceGame extends JFrame implements KeyListener {
     private static final int WIDTH = 500;
@@ -15,14 +9,20 @@ public class SpaceGame extends JFrame implements KeyListener {
     private static final int PLAYER_HEIGHT = 50;
     private static final int OBSTACLE_WIDTH = 20;
     private static final int OBSTACLE_HEIGHT = 20;
+    private static final int PROJECTILE_WIDTH = 5;
+    private static final int PROJECTILE_HEIGHT = 10;
     private static final int PLAYER_SPEED = 5;
     private static final int OBSTACLE_SPEED = 3;
+    private static final int PROJECTILE_SPEED = 10;
 
     private JPanel gamePanel;
     private Timer timer;
     private boolean isGameOver;
     private int playerX, playerY;
-    private List<Point> obstacles;
+    private int projectileX, projectileY;
+    private boolean isProjectileVisible;
+    private boolean isFiring;
+    private java.util.List<Point> obstacles;
 
     public SpaceGame() {
         setTitle("Space Game");
@@ -43,8 +43,12 @@ public class SpaceGame extends JFrame implements KeyListener {
 
         playerX = WIDTH / 2 - PLAYER_WIDTH / 2;
         playerY = HEIGHT - PLAYER_HEIGHT - 20;
-        obstacles = new ArrayList<>();
+        projectileX = playerX + PLAYER_WIDTH / 2 - PROJECTILE_WIDTH / 2;
+        projectileY = playerY;
+        isProjectileVisible = false;
         isGameOver = false;
+        isFiring = false;
+        obstacles = new java.util.ArrayList<>();
 
         timer = new Timer(20, new ActionListener() {
             @Override
@@ -64,6 +68,11 @@ public class SpaceGame extends JFrame implements KeyListener {
 
         g.setColor(Color.BLUE);
         g.fillRect(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
+
+        if (isProjectileVisible) {
+            g.setColor(Color.GREEN);
+            g.fillRect(projectileX, projectileY, PROJECTILE_WIDTH, PROJECTILE_HEIGHT);
+        }
 
         g.setColor(Color.RED);
         for (Point obstacle : obstacles) {
@@ -94,12 +103,31 @@ public class SpaceGame extends JFrame implements KeyListener {
                 obstacles.add(new Point(obstacleX, 0));
             }
 
+            // Move projectile
+            if (isProjectileVisible) {
+                projectileY -= PROJECTILE_SPEED;
+                if (projectileY < 0) {
+                    isProjectileVisible = false;
+                }
+            }
+
             // Check collision with player
             Rectangle playerRect = new Rectangle(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
             for (Point obstacle : obstacles) {
                 Rectangle obstacleRect = new Rectangle(obstacle.x, obstacle.y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
                 if (playerRect.intersects(obstacleRect)) {
                     isGameOver = true;
+                    break;
+                }
+            }
+
+            // Check collision with obstacle
+            Rectangle projectileRect = new Rectangle(projectileX, projectileY, PROJECTILE_WIDTH, PROJECTILE_HEIGHT);
+            for (int i = 0; i < obstacles.size(); i++) {
+                Rectangle obstacleRect = new Rectangle(obstacles.get(i).x, obstacles.get(i).y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
+                if (projectileRect.intersects(obstacleRect)) {
+                    obstacles.remove(i);
+                    isProjectileVisible = false;
                     break;
                 }
             }
@@ -113,6 +141,22 @@ public class SpaceGame extends JFrame implements KeyListener {
             playerX -= PLAYER_SPEED;
         } else if (keyCode == KeyEvent.VK_RIGHT && playerX < WIDTH - PLAYER_WIDTH) {
             playerX += PLAYER_SPEED;
+        } else if (keyCode == KeyEvent.VK_SPACE && !isFiring) {
+            isFiring = true;
+            projectileX = playerX + PLAYER_WIDTH / 2 - PROJECTILE_WIDTH / 2;
+            projectileY = playerY;
+            isProjectileVisible = true;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(500); // Limit firing rate
+                        isFiring = false;
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }).start();
         }
     }
 
