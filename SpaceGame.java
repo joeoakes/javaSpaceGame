@@ -134,10 +134,13 @@ public class SpaceGame extends JFrame implements KeyListener {
                 Rectangle obstacleRect = new Rectangle(obstacles.get(i).x, obstacles.get(i).y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
                 if (projectileRect.intersects(obstacleRect)) {
                     obstacles.remove(i);
+                    score += 10;
                     isProjectileVisible = false;
                     break;
                 }
             }
+
+            scoreLabel.setText("Score: " + score);
         }
     }
 
