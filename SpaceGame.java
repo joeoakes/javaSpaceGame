@@ -14,8 +14,10 @@ public class SpaceGame extends JFrame implements KeyListener {
     private static final int PLAYER_SPEED = 5;
     private static final int OBSTACLE_SPEED = 3;
     private static final int PROJECTILE_SPEED = 10;
+    private int score = 0;
 
     private JPanel gamePanel;
+    private JLabel scoreLabel;
     private Timer timer;
     private boolean isGameOver;
     private int playerX, playerY;
@@ -37,6 +39,11 @@ public class SpaceGame extends JFrame implements KeyListener {
                 draw(g);
             }
         };
+
+        scoreLabel = new JLabel("Score: 0");
+        scoreLabel.setBounds(10, 10, 100, 20);
+        gamePanel.add(scoreLabel);
+
         add(gamePanel);
         gamePanel.setFocusable(true);
         gamePanel.addKeyListener(this);
